@@ -84,18 +84,61 @@ fn print_board_pieces(board_pieces: [64]u8) void {
     // |---|---|---|---|---|---|---|---|
     // | R | N | B | K | Q | B | N | R |
     // |---|---|---|---|---|---|---|---|
-    const sep_line = "|---|---|---|---|---|---|---|---|\n";
+    const sep_line = "|---|---|---|---|---|---|---|---|---|---|\n";
+    const fst_line = "|---| A | B | C | D | E | F | G | H |---|\n";
+    std.debug.print("{s}", .{sep_line});
 
     // First row should how have a leading newline
+    std.debug.print("{s}", .{fst_line});
     std.debug.print("{s}", .{sep_line});
     for (0.., board_pieces) |i, p| {
+        const row: u8 = @intCast(i / 8);
+        if ((i & 7) == 0) {
+            std.debug.print("| {d} ", .{row + 1});
+        }
         std.debug.print("| {u} ", .{p});
 
         // Check if the last piece in a row
         // Which happens every 8th iteration1
         // Same as doing ( (i + 1) % 8) == 0
         if ((i & 7) == 7) {
-            std.debug.print("|\n{s}", .{sep_line});
+            std.debug.print("| {d} |\n{s}", .{ row + 1, sep_line });
         }
+    }
+
+    std.debug.print("{s}", .{fst_line});
+    std.debug.print("{s}", .{sep_line});
+}
+
+pub fn compare_bit_boards(board1: u64, board2: u64) void {
+    const fst_line = " |A|B|C|D|E|F|G|H|    |A|B|C|D|E|F|G|H|\n";
+
+    // First row should how have a leading newline
+    std.debug.print("{s}", .{fst_line});
+    var p1 = board1;
+    var p2 = board2;
+    for (0..8) |i| {
+        std.debug.print("{d}", .{i + 1});
+        for (0..8) |_| {
+            if ((p1 & 1) == 1) {
+                std.debug.print("|x", .{});
+            } else {
+                std.debug.print("|_", .{});
+            }
+
+            p1 >>= 1;
+        }
+
+        std.debug.print("|    |", .{});
+        for (0..8) |_| {
+            if ((p2 & 1) == 1) {
+                std.debug.print("x|", .{});
+            } else {
+                std.debug.print("_|", .{});
+            }
+
+            p2 >>= 1;
+        }
+        std.debug.print("{d}\n", .{i + 1});
     }
 }
