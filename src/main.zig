@@ -1,44 +1,36 @@
 const std = @import("std");
 pub const debug = @import("debug.zig");
 pub const moves = @import("moves.zig");
+pub const lookup = @import("lookup.zig");
 
 pub fn main() !void {
     // const board: [12]u64 = comptime create_board();
     // kdebug.print_board(board);
-    //
     var king_moves: [64]u64 = undefined;
     var knight_moves: [64]u64 = undefined;
     var white_pawn_moves: [64]u64 = undefined;
     var black_pawn_moves: [64]u64 = undefined;
+    var bishop_moves: [64]u64 = undefined;
+    var rook_moves: [64]u64 = undefined;
+    var queen_moves: [64]u64 = undefined;
 
     // Use u6 as a loop counter, since the move generators usually take u6
     inline for (0..64) |i| {
-        king_moves[i] = moves.generateKingMoveBitboard(i);
+        king_moves[i] = comptime moves.generateKingMoveBitboard(i);
         knight_moves[i] = moves.generateKnightMoves(i);
         white_pawn_moves[i] = moves.generate_white_pawn_moves(i);
-
-        // i is u6, so we need to make sure it doesn't overflow
-        //  if (i == 8) {
-        //      std.debug.print("{d}\n", .{i});
-        //      debug.print_single_board_piece(black_pawn_moves[i]);
-
-        //      std.debug.print("white {d}\n", .{i});
-        //      debug.print_single_board_piece(white_pawn_moves[i]);
-        //  }
-        if (i < 16) {
-            std.debug.print("{d}\n", .{i});
-            black_pawn_moves[i] = moves.generate_black_pawn_moves(i);
-            debug.print_single_board_piece(black_pawn_moves[i]);
-
-            // std.debug.print("white {d}\n", .{i});
-            // debug.print_single_board_piece(white_pawn_moves[i]);
+        black_pawn_moves[i] = moves.generate_black_pawn_moves(i);
+        bishop_moves[i] = moves.generate_bishop_moves_12(i);
+        rook_moves[i] = moves.generate_rook_moves(i);
+        queen_moves[i] = moves.generate_queen_moves(i);
+        // if (i == 8 or i == 17 or i == 28 or i == 36 or i == 47 or i == 55) {
+        if (i == 0 or i == 33 or i == 45 or i == 62 or i == 27) {
+            std.debug.print("\n\n====================== {d} - {s} ======================\n", .{ i, lookup.index_to_pos(i) });
+            debug.print_possible_moves(knight_moves[i], i);
         }
 
         if (i == 63) break;
     }
-
-    // debug.print_single_board_piece(king_moves[0]);
-    // debug.print_single_board_piece(knight_moves[0]);
 }
 
 //     63 -- 56 55 -- 48 47    40 39 -- 32 31 -- 24 23 -- 16 15 --- 8 7 ---- 0
