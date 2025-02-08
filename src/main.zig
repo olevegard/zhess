@@ -24,7 +24,7 @@ pub fn main() !void {
         rook_moves[i] = moves.generate_rook_moves(i);
         queen_moves[i] = moves.generate_queen_moves(i);
         // if (i == 8 or i == 17 or i == 28 or i == 36 or i == 47 or i == 55) {
-        if (i == 0 or i == 33 or i == 45 or i == 62 or i == 27) {
+        if (i < 20) {
             std.debug.print("\n\n====================== {d} - {s} ======================\n", .{ i, lookup.index_to_pos(i) });
             debug.print_possible_moves(knight_moves[i], i);
         }

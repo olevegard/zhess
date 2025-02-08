@@ -12,6 +12,19 @@ pub inline fn pos_to_index(pos: []const u8) u8 {
 pub inline fn index_to_pos(index: u8) *const [2:0]u8 {
     return &[2:0]u8{
         'A' + (index % 8), // 65
-        '1' + (index / 8), // 48
+        '8' - (index >> 3), // 48
     };
+}
+
+pub inline fn index_to_row(index: u8) u3 {
+    // Since each row starts at 0,8,16,24,32,40,48 or 56
+    // we can use << 3 to get the row
+    // ie. H8 = 7 = 0000 0111 >> 3 = 0
+    // ie. B2 = 9 = 0000 1001 >> 3 = 1
+    // ie. C5 = 9 = 0000 1001 >> 3 = 1
+    return index << 3;
+}
+
+pub inline fn index_to_col(index: u8) u3 {
+    return index & 7;
 }
