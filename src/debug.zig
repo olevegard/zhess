@@ -150,24 +150,47 @@ pub fn print_possible_moves(moves: u64, piece_pos: u64) void {
 
     std.debug.print("{s}\n{s}\n{s}\n", .{ sep_line, fst_line, sep_line });
 
+    // 0 -7 = 7
+    // 0000
+    // 0111
+    // 8 -15 = 6
+    // 1000
+    // 1111
+    // 15 - 23 = 5
+    //
+    // 10000
+    // 10111
+    // 1000
+    const row = (piece_pos >> 3);
+    const col = piece_pos & 7;
+
+    // 0000 0000
+    // 0000 0001
+    // 0000 0001
+    // 0000 0001
+
+    // 0000 0001 0000 0000
+    std.debug.print("V : {d} = {b}\n", .{ moves, moves });
     var p = std.math.pow(u64, 2, 63);
     for (0..8) |i| {
-        std.debug.print("| {d} ", .{i + 1});
+        std.debug.print("| {d} ", .{8 - i});
 
         for (0..8) |j| {
             // std.debug.print("\np : {b}\nm : {b}\n{any}\n", .{ p, moves, moves & p });
-            if (((i * 8) + j) == piece_pos) {
-                std.debug.print("| o ", .{});
-            } else if ((moves & p) > 1) {
+            if (row == i and col == j) {
+                // std.debug.print("| o ", .{});
+                // continue;
+            }
+
+            if ((moves & std.math.shr(u64, p, j)) > 0) {
                 std.debug.print("| x ", .{});
             } else {
                 std.debug.print("| _ ", .{});
             }
-
-            p >>= 1;
         }
+        p >>= 8;
 
-        std.debug.print("| {d} |\n{s}\n", .{ i + 1, sep_line });
+        std.debug.print("| {d} |\n{s}\n", .{ 8 - i, sep_line });
     }
 
     std.debug.print("{s}\n{s}\n", .{ fst_line, sep_line });

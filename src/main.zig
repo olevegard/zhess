@@ -1,7 +1,12 @@
 const std = @import("std");
 pub const debug = @import("debug.zig");
-pub const moves = @import("moves.zig");
 pub const lookup = @import("lookup.zig");
+pub const bishops = @import("pieces/bishop.zig");
+pub const knights = @import("pieces/knight.zig");
+pub const pawns = @import("pieces/pawn.zig");
+pub const kings = @import("pieces/king.zig");
+pub const rooks = @import("pieces/rook.zig");
+pub const queens = @import("pieces/queen.zig");
 
 pub fn main() !void {
     // const board: [12]u64 = comptime create_board();
@@ -16,17 +21,21 @@ pub fn main() !void {
 
     // Use u6 as a loop counter, since the move generators usually take u6
     inline for (0..64) |i| {
-        king_moves[i] = comptime moves.generateKingMoveBitboard(i);
-        knight_moves[i] = moves.generateKnightMoves(i);
-        white_pawn_moves[i] = moves.generate_white_pawn_moves(i);
-        black_pawn_moves[i] = moves.generate_black_pawn_moves(i);
-        bishop_moves[i] = moves.generate_bishop_moves_12(i);
-        rook_moves[i] = moves.generate_rook_moves(i);
-        queen_moves[i] = moves.generate_queen_moves(i);
+        if (i != 8) {
+            continue;
+        }
+        king_moves[i] = comptime kings.generate_king_moves(i);
+        knight_moves[i] = knights.generate_knight_moves(i);
+        white_pawn_moves[i] = pawns.generate_white_pawn_moves(i);
+        black_pawn_moves[i] = pawns.generate_white_pawn_moves(i);
+        bishop_moves[i] = bishops.generate_bishop_moves(i);
+        rook_moves[i] = rooks.generate_rook_moves(i);
+        queen_moves[i] = queens.generate_queen_moves(i);
         // if (i == 8 or i == 17 or i == 28 or i == 36 or i == 47 or i == 55) {
-        if (i < 20) {
+        // if ((i % 4) == 0 and i < 56 and i > 7) {
+        if (i != 1000) {
             std.debug.print("\n\n====================== {d} - {s} ======================\n", .{ i, lookup.index_to_pos(i) });
-            debug.print_possible_moves(knight_moves[i], i);
+            debug.print_possible_moves(queen_moves[i], i);
         }
 
         if (i == 63) break;
