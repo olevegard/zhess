@@ -1,10 +1,10 @@
 const std = @import("std");
 const testing = @import("testing.zig");
+const util = @import("util.zig");
 
 const diagonal_tl: u64 = 0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001;
 const diagonal_tr: u64 = 0b00000001_00000010_00000100_00001000_00010000_00100000_01000000_10000000;
 
-const max: u64 = std.math.pow(u64, 2, 63);
 pub fn generate_bishop_moves(bishop_pos: u6) u64 {
     // We don't need to check against the bounds of the table here since
     // the piece will be able to move infintely in all four directions
@@ -34,12 +34,10 @@ pub fn generate_bishop_moves(bishop_pos: u6) u64 {
         diagonal_2 >>= (row - rel_col) * 8;
     }
 
-    var combined = diagonal_1 | diagonal_2;
+    const combined = diagonal_1 | diagonal_2;
 
     // Subtract player pos
-    combined &= ~std.math.shr(u64, max, bishop_pos);
-
-    return combined;
+    return util.strip_player_pos(combined, bishop_pos);
 }
 
 test generate_bishop_moves {
