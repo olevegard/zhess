@@ -94,7 +94,7 @@ fn print_board_pieces(board_pieces: [64]u8) void {
     for (0.., board_pieces) |i, p| {
         const row: u8 = @intCast(i / 8);
         if ((i & 7) == 0) {
-            std.debug.print("| {d} ", .{row + 1});
+            std.debug.print("| {d} ", .{8 - row});
         }
         std.debug.print("| {u} ", .{p});
 
@@ -102,7 +102,7 @@ fn print_board_pieces(board_pieces: [64]u8) void {
         // Which happens every 8th iteration1
         // Same as doing ( (i + 1) % 8) == 0
         if ((i & 7) == 7) {
-            std.debug.print("| {d} |\n{s}", .{ row + 1, sep_line });
+            std.debug.print("| {d} |\n{s}", .{ 8 - row, sep_line });
         }
     }
 
