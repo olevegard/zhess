@@ -12,7 +12,10 @@ pub fn generate_rook_moves(rook_pos: u6) u64 {
     return util.strip_player_pos(entire_col, rook_pos);
 }
 
-pub fn generate_with_enemy_vertical(rook_pos: u6, enemies: u64) u64 {
+pub fn generate_with_enemy_all(rook_pos: u6, enemies: u64) u64 {
+    return generate_with_enemy_col(rook_pos, enemies) | generate_with_enemy_row(rook_pos, enemies);
+}
+pub fn generate_with_enemy_col(rook_pos: u6, enemies: u64) u64 {
     // Need to isolate the enemies on this col
     const col: u6 = rook_pos & 7;
     const full_col = vertical >> col;
@@ -31,15 +34,12 @@ pub fn generate_with_enemy_vertical(rook_pos: u6, enemies: u64) u64 {
     const start = util.index_to_bitfield_pos(col -% 1);
     top_en += @intFromBool(top_en == 0 and col > 0) * start;
 
-    std.debug.print("col {d}\n", .{col});
-    std.debug.print("Oppon pieces {b:0>64}\n", .{enemies_on_col});
-    std.debug.print("Leftt pieces {b:0>64}\n", .{top_en});
-    std.debug.print("Right pieces {b:0>64}\n", .{bottom_en});
-
+    // This will fill all cells between the first and last
+    // So we use & full_col to separate out the cells we want
     return (top_en -% bottom_en) & full_col;
 }
 
-pub fn generate_with_enemy(rook_pos: u6, enemies: u64) u64 {
+pub fn generate_with_enemy_row(rook_pos: u6, enemies: u64) u64 {
     // Need to isolate the enemies on this row
     const row: u6 = (rook_pos >> 3) * 8;
     const full_row = horizontal >> row;
@@ -80,6 +80,7 @@ pub fn generate_with_enemy(rook_pos: u6, enemies: u64) u64 {
     left_en += @intFromBool(left_en == 0 and row > 0) * start;
 
     std.debug.print("Row {d}\n", .{(row -% 1) & vertical});
+    std.debug.print("Rook  pieces {b:0>64}\n", .{rook_pos_bf});
     std.debug.print("Oppon pieces {b:0>64}\n", .{enemies_on_row});
     std.debug.print("Leftt pieces {b:0>64}\n", .{left_en});
     std.debug.print("Right pieces {b:0>64}\n", .{right_en});
