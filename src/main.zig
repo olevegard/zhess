@@ -7,193 +7,184 @@ pub const pawns = @import("pieces/pawn.zig");
 pub const kings = @import("pieces/king.zig");
 pub const rooks = @import("pieces/rook.zig");
 pub const queens = @import("pieces/queen.zig");
+pub const util = @import("pieces/util.zig");
 
 pub fn main() !void {
-    // const board: [12]u64 = comptime create_board();
-    // kdebug.print_board(board);
-    var king_moves: [64]u64 = undefined;
-    var knight_moves: [64]u64 = undefined;
-    var white_pawn_moves: [64]u64 = undefined;
-    var black_pawn_moves: [64]u64 = undefined;
-    var bishop_moves: [64]u64 = undefined;
-    var rook_moves: [64]u64 = undefined;
-    var queen_moves: [64]u64 = undefined;
+    // var board: [12]u64 = comptime create_board();
+    // debug.print_board(board);
+
+    // const piece_names = "PpRrNnBbQqKk";
+    var moves: [7][64]u64 = undefined;
 
     // Use u6 as a loop counter, since the move generators usually take u6
-    inline for (0..64) |i| {
-        if (i != 8) {
-            continue;
-        }
-        king_moves[i] = comptime kings.generate_king_moves(i);
-        knight_moves[i] = knights.generate_knight_moves(i);
-        white_pawn_moves[i] = pawns.generate_white_pawn_moves(i);
-        black_pawn_moves[i] = pawns.generate_white_pawn_moves(i);
-        bishop_moves[i] = bishops.generate_bishop_moves(i);
-        rook_moves[i] = rooks.generate_rook_moves(i);
-        queen_moves[i] = queens.generate_queen_moves(i);
-        // if (i == 8 or i == 17 or i == 28 or i == 36 or i == 47 or i == 55) {
-        // if ((i % 4) == 0 and i < 56 and i > 7) {
-        if (i != 1000) {
-            std.debug.print("\n\n====================== {d} - {s} ======================\n", .{ i, lookup.index_to_pos(i) });
-            debug.print_possible_moves(queen_moves[i], i);
-        }
-
-        if (i == 63) break;
+    inline for (0..64) |position| {
+        moves[0][position] = comptime pawns.generate_white_pawn_moves(position);
+        moves[1][position] = comptime pawns.generate_black_pawn_moves(position);
+        // moves[2][position] = rooks.generate_rook_moves(position);
+        moves[3][position] = comptime knights.generate_knight_moves(position);
+        @setEvalBranchQuota(2000);
+        moves[4][position] = comptime bishops.generate_bishop_moves(position);
+        // moves[5][position] = queens.generate_queen_moves(position);
+        moves[6][position] = comptime kings.generate_king_moves(position);
+        if (position == 63) break;
     }
+
+    //                   1234567812345678123456781234567812345678123456781234567812345678
+    const enemy: u64 = 0b0000000000001000000000000000000000000000000000000000100000000000;
+    const player = 20;
+    debug.print_possible_moves_captures(
+        rooks.generate_with_enemy(
+            player,
+            enemy,
+        ),
+        enemy,
+        player,
+    );
+
+    //   const stdin = std.io.getStdIn().reader();
+    //   // const stdout = std.io.getStdOut().writer();
+    //   var input: [3]u8 = undefined;
+    //
+    //   while (input[0] != 'q') {
+    //       var data = MoveData{ .board = board };
+    //       _ = try stdin.readUntilDelimiter(&input, '\n');
+    //
+    //       // Take the coordinat ( A1, etc ) and turn it into the index ( A8 = 0)
+    //       const index1: u8 = lookup.pos_to_index(input[0..2]);
+    //
+    //       // Take that index and get the correspnding bit mask 56 = A8 = 10000000
+    //       data.old_bitmask = util.index_to_bitfield_pos(index1);
+    //
+    //       // Get the index in the board array that belongs to this piece
+    //       data.old_piece_index = try get_piece_index(data.old_bitmask, board);
+    //
+    //       // Get the moves for the piece type at the selected pos
+    //       data.moves = moves[data.old_piece_index][index1];
+    //
+    //       // Get all pieces on the board in two bit fields
+    //       data.all_pieces = get_pieces_bit_field(board);
+    //
+    //       // Remove the pieces belonging to the current player from the possible moves
+    //       data.moves &= ~data.all_pieces.current_player;
+    //
+    //       debug.print_possible_moves_captures(data.moves, data.all_pieces.oponent & data.moves, index1);
+    //       _ = try stdin.readUntilDelimiter(&input, '\n');
+    //
+    //       const index2 = lookup.pos_to_index(input[0..2]);
+    //       data.new_bitmask = util.index_to_bitfield_pos(index2);
+    //
+    //       board = perform_move(data);
+    //       debug.print_board(board);
+    //   }
+}
+const MoveData = struct {
+    board: [12]u64,
+    moves: u64 = 0,
+    all_pieces: AllPieces = AllPieces{},
+    old_piece_index: u8 = 0,
+    old_bitmask: u64 = 0,
+    new_bitmask: u64 = 0,
+};
+
+const AllPieces = struct {
+    current_player: u64 = 0,
+    oponent: u64 = 0,
+};
+
+fn perform_move(data: MoveData) [12]u64 {
+    debug.print_possible_moves_captures(data.moves, data.all_pieces.oponent & data.moves, 0);
+    if (data.moves & data.new_bitmask == 0) {
+        std.debug.print("Invalid move!", .{});
+        return data.board;
+    }
+
+    var new_board: [12]u64 = data.board;
+
+    // Check if the move was a capture
+    if (data.all_pieces.oponent & data.new_bitmask > 0) {
+        // Find which array to remove the old piece from
+        const captured_pi: u8 = get_piece_array_index(data.new_bitmask, data.board);
+
+        // Remove the captured piece
+        new_board[captured_pi] &= ~data.new_bitmask;
+    }
+
+    // Remove the piece from the current position
+    new_board[data.old_piece_index] &= ~data.old_bitmask;
+
+    // Put the piece in its new position
+    new_board[data.old_piece_index] |= data.new_bitmask;
+
+    return new_board;
 }
 
-//     63 -- 56 55 -- 48 47    40 39 -- 32 31 -- 24 23 -- 16 15 --- 8 7 ---- 0
-//
-//35:  00000000 00000000 00000000 00001000 00000000 00000000 00000000 00000000,
-//33:  00000000 00000000 00000000 00000010 00000000 00000000 00000000 00000000,
-//28:  00000000 00000000 00000000 00000000 00010000 00000000 00000000 00000000,
-//24:  00000000 00000000 00000000 00000000 00000001 00000000 00000000 00000000,
-//18:  00000000 00000000 00000000 00000000 00000000 00000100 00000000 00000000,
-//12:  00000000 00000000 00000000 00000000 00000000 00000000 00010000 00000000,
-//08:  00000000 00000000 00000000 00000000 00000000 00000000 00000001 00000000,
-//03:  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00001000,
-//01:  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001,
-//
-//
-//     39 -- 32 31 -- 24 23 -- 16 15 --- 8 7 ---- 0
-//18:  00001010 00010001 00000100 00010001 00001010,
+fn get_pieces_bit_field(board: [12]u64) AllPieces {
+    var pieces = AllPieces{};
+    for (board, 0..) |p, j| {
+        if (j % 2 == 0) {
+            pieces.current_player |= p;
+        } else {
+            pieces.oponent |= p;
+        }
+    }
 
-//
-// 4321 0987 6543
-// 0000 0000 0000 0000 0000 0000 0000 0000
-// n =            18
-// x = 1, 3, 8, 12, 24, 28, 33, 35
-// +/- 6
-// +/- 10
-// +/- 15
-// +/- 17
-//
-//   32 16 08 04 02 01
-//1   0  0  0  0  0  1
-//3   0  0  0  0  1  1
-//8   0  0  1  0  0  0
-//12  0  0  1  1  0  0
-//nn  0  1  0  0  1  0
-//24  0  1  1  0  0  0
-//28  0  1  1  1  0  0
-//33  1  0  0  0  0  1
-//35  1  0  0  0  1  1
-//
-// |---|---|---|---|---|
-// | 0 | x | 2 | x | 4 |
-// |---|---|---|---|---|
-// | x | 9 |10 |11 | x |
-// |---|---|---|---|---|
-// |16 |17 | n |19 |20 |
-// |---|---|---|---|---|
-// | x |25 |26 |27 | x |
-// |---|---|---|---|---|
-// |32 | x |34 | x |36 |
-// |---|---|---|---|---|
-//
-//
-// |---|---|---|
-// | n | 1 | 2 |
-// |---|---|---|
-// | 8 | 9 | x |
-// |---|---|---|
-// |16 | x |18 |
-// |---|---|---|
+    std.debug.print("CurrentP pieces {b:0>64}\n", .{pieces.current_player});
+    std.debug.print("Opponent pieces {b:0>64}\n", .{pieces.oponent});
+    return pieces;
+}
 
-// |---|---|---|---|---|
-// | - | - | n | 1 | 2 |
-// |---|---|---|---|---|
-// | x | 9 |10 |11 | x |
-// |---|---|---|---|---|
-// | x |17 |18 | x |20 |
-// |---|---|---|---|---|
+fn get_piece_array_index(bf_pos: u64, board: [12]u64) u8 {
+    for (0..12) |i| {
+        if (board[i] & bf_pos > 0) {
+            const r: u8 = @intCast(i);
+            return r;
+        }
+    }
 
-//     39 -- 32 31 -- 24 23 -- 16 15 --- 8 7 ---- 0
-//0 :  00000000 00000000 000000x0 00000x00 0000000n = 27
-//_ :  0000x0 00000x00 0000000n
-//18:  0000x0x0 000x000x 00000n00 000x000x 0000x0x0 = 144
-// 0 -> 1024
+    return 0;
+}
 
-// |---|---|---|
-// | 0 | 1 | 2 |
-// |---|---|---|
-// | 8 | k |10 |
-// |---|---|---|
-// |16 |17 |18 |
-// |---|---|---|
+const InvalidMoveError = error{
+    InvalidPiece,
+};
 
-//            4    8    12   16   20   24   28   32   36   40   44   48   52   56   60
-//       1010 0000 1110 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
-const pos0: u64 = 0b0100_0000_1100_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
-const pos1: u64 = 0b1010_0000_0111_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
-const pos2: u64 = 0b0101_0000_0011_1000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
-const pos3: u64 = 0b0010_1000_0001_1100_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
-const pos4: u64 = 0b0001_0100_0000_1110_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
-const pos5: u64 = 0b0000_1010_0000_0111_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
-const pos6: u64 = 0b0000_0101_0000_0011_1000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
-const pos7: u64 = 0b0000_0010_0000_0001_1000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
-const pos8: u64 = 0b0000_0000_0100_0000_1100_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
-//
-// |---|---|---|---|---|---|---|---|---|
-// | 0 | k | x | - | - | - | - | x | k |
-// |---|---|---|---|---|---|---|---|---|
-// | 8 | x | x | - | - | - | - | x | x |
-// |---|---|---|---|---|---|---|---|---|
-// |16 | - | - | x | x | x | - | - | - |
-// |---|---|---|---|---|---|---|---|---|
-// |24 | - | - | x | k | x | - | x | x |
-// |---|---|---|---|---|---|---|---|---|
-// |32 | - | - | x | x | x | - | x | k |
-// |---|---|---|---|---|---|---|---|---|
-// |40 | - | - | - | - | - | - | x | x |
-// |---|---|---|---|---|---|---|---|---|
-// |48 | - | x | x | x | - | - | - | - |
-// |---|---|---|---|---|---|---|---|---|
-// |56 | - | x | k | x | - | - | - | - |
-// |---|---|---|---|---|---|---|---|---|
+// Finds which piece is at position with bitfield calue bf_pos
+fn get_piece_index(bf_pos: u64, board: [12]u64) InvalidMoveError!u8 {
+    const i = for (0..12) |i| {
+        if (board[i] & bf_pos > 0) {
+            break i;
+        }
+    } else 0;
 
-// k000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
-// 0100 0000 1100 0000 0000 0000
-//
-// 0k00 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
-// 1010 0000 1100 0000 0000 0000
-
-//      4    8    12   16   20   24   28   32   36   40   44   48
-// 0000 000k 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
-// 0000 0010 0000 0011 0000 0000 0000 0000 0000 0000 0000 0000
-
-//      4    8    12   16   20   24   28   32   36   40   44   48
-// 0000 0000 0000 0000 0000 0000 000k 0000 0000 0000 0000 0000
-// 0000 0000 0000 0000 0011 1000 0010 1000 0011 1000 0000 0000
-//
-// 0k00 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
-// 1010 0000 1100 0000 0000 0000
-//
-// 0000 0000 0000 0000 0000 0000 000k 0000 0000 0000 0000 0000
-// 0000 0000 0000 0000 0011 1000 0010 1000 0011 1000 0000 0000
-//
-//      4    8    12   16   20   24   28   32   36   40   44   48
-// 0000 0000 0000 0000 0000 0000 0000 0000 0000 000k 0000 0000 0000
-// 0000 0000 0000 0000 0000 0000 0000 0011 0000 0010 0000 0011 0000
-//
-//
-// 0000 0000 0k00 0000 0000 0000
-// 1110 0000 1010 0000 1110 0000
-//
-// 00k0 0000 0000 0000 0000 0000
-// 0100 0000 0100 0001 1100 0000
-//
-// 0010 0000 0k00 0000 0000 0000
-// 0010 0000 0k00 0000 0000 0000
-// 1110 0000 1010 0000 1110 0000
-//            010 0000 1110 0000
-
+    return switch (i) {
+        // Pawns
+        0 => 0,
+        1 => 1,
+        // Rooks
+        2 => 2,
+        3 => 2,
+        // Knight
+        4 => 3,
+        5 => 3,
+        // Bishop
+        6 => 4,
+        7 => 4,
+        // Queen
+        8 => 5,
+        9 => 5,
+        // Kings
+        10 => 6,
+        11 => 6,
+        // TODO : Return error here
+        else => InvalidMoveError.InvalidPiece,
+    };
+}
 fn create_board() [12]u64 {
     return [12]u64{
         // Pawns
         //
-        0b11111111_10000001_10000001_10000001_10000001_10000001_10000001_11111111,
-        // 0b00000000_00000000_00000000_00000000_00000000_00000000_11111111_00000000,
+        // 0b11111111_10000001_10000001_10000001_10000001_10000001_10000001_11111111,
+        0b00000000_00000000_00000000_00000000_00000000_00000000_11111111_00000000,
         0b00000000_11111111_00000000_00000000_00000000_00000000_00000000_00000000,
 
         // Rooks

@@ -144,6 +144,10 @@ pub fn compare_bit_boards(board1: u64, board2: u64) void {
 }
 
 pub fn print_possible_moves(moves: u64, piece_pos: u64) void {
+    print_possible_moves_captures(moves, 0, piece_pos);
+}
+
+pub fn print_possible_moves_captures(moves: u64, captures: u64, piece_pos: u64) void {
     const sep_line = "|---|---|---|---|---|---|---|---|---|---|";
     const fst_line = "|   | A | B | C | D | E | F | G | H |   |";
 
@@ -162,8 +166,10 @@ pub fn print_possible_moves(moves: u64, piece_pos: u64) void {
                 // continue;
             }
 
-            if ((moves & std.math.shr(u64, p, j)) > 0) {
+            if ((captures & std.math.shr(u64, p, j)) > 0) {
                 std.debug.print("| x ", .{});
+            } else if ((moves & std.math.shr(u64, p, j)) > 0) {
+                std.debug.print("| # ", .{});
             } else {
                 std.debug.print("| _ ", .{});
             }
