@@ -6,11 +6,28 @@ const vertical: u64 = 0b10000000_10000000_10000000_10000000_10000000_10000000_10
 const horizontal: u64 = 0b11111111_00000000_00000000_00000000_00000000_00000000_00000000_00000000;
 pub fn generate_rook_moves(rook_pos: u6) u64 {
     const col = rook_pos & 7;
-    const row: u6 = rook_pos >> 3;
+    const entire_col: u64 = vertical >> col;
 
-    const combined = (vertical >> (col)) | (horizontal >> (row * 8));
+    return util.strip_player_pos(entire_col, rook_pos);
+}
 
-    return util.strip_player_pos(combined, rook_pos);
+pub fn generate_with_enemy(rook_pos: u6, enemies: u64) u64 {
+    const col = rook_pos & 7;
+    const row: u3 = @intCast(rook_pos >> 3);
+    // Move entire_col to the same column as rook_pos
+    var entire_col: u64 = vertical >> col;
+    entire_col <<= 8 * (rook_pos >> row);
+
+    for (0..8) |_| {
+        if (entire_col & enemies == 0) {
+            break;
+        }
+
+        // entire_col <<= 8;
+    }
+
+    // return util.strip_player_pos(entire_col, rook_pos);
+    return entire_col;
 }
 test generate_rook_moves {
     std.testing.log_level = .debug;
