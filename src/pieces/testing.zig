@@ -1,9 +1,24 @@
 const std = @import("std");
+const util = @import("util.zig");
 
 pub fn expectBitBoardArray(all_correct_results: [64]u64, gen_func: fn (pos: u6) u64) !void {
     for (0.., all_correct_results) |i, correct_possible_moves| {
         if (!expectBitBoardEqual(gen_func(@intCast(i)), correct_possible_moves)) {
             std.debug.print("Index was {d}\n", .{i});
+            try std.testing.expect(false);
+        }
+    }
+}
+
+pub fn expectBitBoardArray_En(all_cases: std.ArrayList([3]u64), gen_func: fn (pos: u6, enemies: u64) u64) !void {
+    for (all_cases.items) |case| {
+        const actual = gen_func(@intCast(case[0] % 64), case[1]);
+        if (!expectBitBoardEqual(actual, case[2])) {
+            std.debug.print("Test failed!\nPlayer pos {d}\n", .{case[0]});
+            util.print_u64("Enemies ", case[1]);
+            util.print_u64("Expecte ", case[2]);
+            util.print_u64("ACtual  ", actual);
+
             try std.testing.expect(false);
         }
     }

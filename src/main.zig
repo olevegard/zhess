@@ -33,22 +33,39 @@ pub fn main() !void {
     // const d2: u64 = 0b0000000000001000000000000000000000000000000000000000000000000000;
     // const enemy: u64 = 0b0000000000001000000000000000000000000000000000000000100000000000;
     //                   12345678_12345678_12345678_12345678_12345678_12345678_12345678_12345678
-    const enemy: u64 = 0b00000000_01000000_00001000_00000000_01010010_01000100_00001000_00000010;
+    // const enemy: u64 = 0b00000000_01000000_00001000_00000000_01010000_01000100_00001000_00000010;
     // const enemy: u64 = 0b00000000_00000000_00001000_00000000_00000000_01000100_00001000_00000000;
     //  const enemy: u64 = 0b00000000_00000000_00001000_00000000_00000000_00000100_00001000_00000000;
     // const enemy: u64 = 0b00000000_00000000_00001000_00000000_00000000_01000000_00001000_00000000;
     // const player = 4;
 
     // const player = 63;
-    const player = 36;
+    //
+
+    // const enemy: u64 = 0b00100100_00000000_00000000_00000000_00000000_00000000_00000000_11000000;
+    const enemy: u64 = 0b01000010_00000000_00000000_00000000_00000000_00000000_00000000_11000000;
+
+    const player = 4;
+    //debug.print_possible_moves_captures(
+    //    rooks.with_enemy_row(
+    //        player,
+    //        enemy,
+    //    ),
+    //    enemy,
+    //    player,
+    //);
+
     debug.print_possible_moves_captures(
-        rooks.generate_with_enemy_row(
+        rooks.movement_short(
             player,
             enemy,
         ),
         enemy,
         player,
-    );
+    ); // rooks.strip_lower_test(0b10000000, 0b10000000);
+    // rooks.strip_lower_test(0b11000000, 0b10000000);
+    // rooks.strip_lower_test(0b11111110, 0b10000000);
+    // rooks.strip_lower_test(0b10001110, 0b10000000);
 
     //   const stdin = std.io.getStdIn().reader();
     //   // const stdout = std.io.getStdOut().writer();

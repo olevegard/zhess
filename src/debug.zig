@@ -162,15 +162,22 @@ pub fn print_possible_moves_captures(moves: u64, captures: u64, piece_pos: u64) 
 
         for (0..8) |j| {
             if (row == i and col == j) {
-                // std.debug.print("| o ", .{});
-                // continue;
+                std.debug.print("| o ", .{});
+                continue;
             }
 
-            if ((captures & std.math.shr(u64, p, j)) > 0) {
+            if ((moves & std.math.shr(u64, p, j)) > 0) {
+                // If move AND capture
+                if ((captures & std.math.shr(u64, p, j)) > 0) {
+                    std.debug.print("|#x#", .{});
+                } // If just a move
+                else {
+                    std.debug.print("| # ", .{});
+                }
+            } else if ((captures & std.math.shr(u64, p, j)) > 0) {
                 std.debug.print("| x ", .{});
-            } else if ((moves & std.math.shr(u64, p, j)) > 0) {
-                std.debug.print("| # ", .{});
-            } else {
+            } // If just a move
+            else {
                 std.debug.print("| _ ", .{});
             }
         }
